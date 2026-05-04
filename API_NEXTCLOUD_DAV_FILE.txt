@@ -1,0 +1,83 @@
+Nhấn biểu tượng người dùng -> Chọn Thiết lập -> Chọn Bảo mật
+Sau đó Đặt tên ứng dụng, ví dụ ConnectAPI -> Sau đó nhấn Tạo ứng dụng mật khẩu mới
+Bạn sẽ nhận 2 trường người dùng và mật khẩu.
+_______________________
+NC_BASE="https://driver.webtui.vn"
+NC_USER="ten_dang_nhap"
+NC_PASS="mat_khau_ung_dung_co_gach_noi"
+DAV="$NC_BASE/remote.php/dav/files/$NC_USER"
+_______________________
+1, Test OCS API (kiểm tra user / list apps / shares)
+curl -u "$NC_USER:$NC_PASS" \
+  -H "OCS-APIRequest: true" \
+  "$NC_BASE/ocs/v2.php/cloud/user?format=json"
+-- Trả về
+{"status":"ok","statuscode":200,"message":"OK"}
+________________________________________________
+2, Tạo folder test-api
+curl -u "$NC_USER:$NC_PASS" -X MKCOL \
+  -o /dev/null -w "HTTP:%{http_code}\n" \
+  "$DAV/test-api"
+-- Trả về
+HTTP:201
+________________________________________________
+3, Upload file hello.txt từ thư mục gốc /tmp/hello.txt
+curl -u "$NC_USER:$NC_PASS" -T /tmp/hello.txt \
+  -o /dev/null -w "HTTP:%{http_code}\n" \
+  "$DAV/hello.txt"
+-- Trả về
+HTTP:201
+________________________________________________
+4, Download file hello.txt vào thư mục thiết bị người dùng /tmp/hello_downloaded.txt
+curl -u "$NC_USER:$NC_PASS" \
+  -o /tmp/hello_downloaded.txt \
+  -w "HTTP:%{http_code}\n" \
+  "$DAV/hello.txt"
+-- Trả về
+HTTP:200
+________________________________________________
+5, Xem danh sách thư mục file
+curl -u "$NC_USER:$NC_PASS" -X PROPFIND \
+  -H 'Depth: 1' \
+  "$NC_BASE/remote.php/dav/files/$NC_USER/" | head -n 50
+________________________________________________
+6, Xóa file hello.txt trong thư mục test-api
+curl -u "$NC_USER:$NC_PASS" -X DELETE \
+  "$NC_BASE/remote.php/dav/files/$NC_USER/test-api/hello.txt" -i
+--
+HTTP/1.1 204 No Content - đã xóa
+HTTP/1.1 404 Not Found - không tồn tại
+________________________________________________
+7, Xóa thư mục test-api
+curl -u "$NC_USER:$NC_PASS" -X DELETE \
+  "$NC_BASE/remote.php/dav/files/$NC_USER/test-api" -i
+--
+HTTP/1.1 204 No Content - đã xóa
+HTTP/1.1 404 Not Found - không tồn tại
+________________________________________________
+8, Đổi tên file hello.txt thành new.txt
+curl -u "$NC_USER:$NC_PASS" -X MOVE \
+  -H "Destination: $DAV/new.txt" \
+  -H "Overwrite: T" \
+  -o /dev/null -w "HTTP:%{http_code}\n" \
+  "$DAV/hello.txt"
+-- Trả về
+HTTP:201
+________________________________________________
+9, Copy file hello.txt thành file hello_copy.txt
+curl -u "$NC_USER:$NC_PASS" -X COPY \
+  -H "Destination: $DAV/hello_copy.txt" \
+  -H "Overwrite: T" \
+  -o /dev/null -w "HTTP:%{http_code}\n" \
+  "$DAV/hello.txt"
+-- Trả về
+HTTP:201
+________________________________________________
+10, Di chuyển file hello.txt vào thư mục Photos/hello.txt
+curl -u "$NC_USER:$NC_PASS" -X MOVE \
+  -H "Destination: $DAV/Photos/hello.txt" \
+  -H "Overwrite: T" \
+  -o /dev/null -w "HTTP:%{http_code}\n" \
+  "$DAV/hello.txt"
+-- Trả về
+HTTP:201
