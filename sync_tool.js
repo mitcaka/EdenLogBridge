@@ -13,6 +13,7 @@ try {
 const config = {
     serverName: process.env.SERVER_NAME || 'EdenServer',
     pzLogFiles: (process.env.PZ_LOG_FILES || '').split(',').map(s => s.trim()).filter(Boolean),
+    pzLogDir: process.env.PZ_LOG_DIR || '',
     stateFile: process.env.STATE_FILE || path.join(__dirname, 'state.json'),
     localWorkDir: process.env.LOCAL_WORK_DIR || path.join(__dirname, 'temp_workspace'),
     remoteBase: process.env.REMOTE_BASE || 'pz-logs/eden',
@@ -53,6 +54,27 @@ function tailText(text, maxLines) {
     const lines = text.split('\n');
     if (lines.length <= maxLines) return text;
     return lines.slice(-maxLines).join('\n');
+}
+
+// Quét đệ quy thư mục
+function walkDir(dir, fileList = []) {
+    if (!fs.existsSync(dir)) return fileList;
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+        const fullPath = path.join(dir, file);
+        try {
+            if (fs.statSync(fullPath).isDirectory()) {
+                walkDir(fullPath, fileList);
+            } else {
+                if (fullPath.endsWith('.txt') || fullPath.endsWith('.log')) {
+                    fileList.push(fullPath);
+                }
+            }
+        } catch (err) {
+            logWarn(`Không thể truy cập ${fullPath}: ${err.message}`);
+        }
+    }
+    return fileList;
 }
 
 // Xử lý zip bằng PowerShell (Windows native)
@@ -256,7 +278,36 @@ async function main() {
 
     const state = loadState();
 
-    for (const filePath of config.pzLogFiles) {
+    let allFiles = [...config.pzLogFiles];
+
+    // Thu thập file từ thư mục Logs đệ quy
+    if (config.pzLogDir) {
+        logInfo(`Đang quét đệ quy thư mục logs: ${config.pzLogDir}`);
+        const dirFiles = walkDir(config.pzLogDir);
+        const now = Date.now();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        let recentCount = 0;
+
+        for (const file of dirFiles) {
+            try {
+                const stats = fs.statSync(file);
+                // Bộ lọc 24h: Chỉ lấy những file có thay đổi trong 24h gần nhất
+                if (now - stats.mtime.getTime() <= oneDayMs) {
+                    if (!allFiles.includes(file)) {
+                        allFiles.push(file);
+                        recentCount++;
+                    }
+                }
+            } catch (e) {
+                logWarn(`Lỗi kiểm tra stats cho ${file}`);
+            }
+        }
+        logInfo(`Tìm thấy ${recentCount} file log bị chỉnh sửa trong 24h qua tại thư mục.`);
+    }
+
+    logInfo(`Tổng cộng cần xử lý ${allFiles.length} file.`);
+
+    for (const filePath of allFiles) {
         await processFile(filePath, state, adapter);
     }
 

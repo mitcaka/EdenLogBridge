@@ -60,14 +60,15 @@ DAV="/remote.php/webdav"
 # 2. PROJECT ZOMBOID
 SERVER_NAME="Eden_PZ_Server"
 PZ_LOG_FILES="C:\Users\Admin\Zomboid\Logs\server-console.txt"
+PZ_LOG_DIR="C:\Users\Admin\Zomboid\Logs"
 REMOTE_BASE="pz-logs/eden"
 STATE_FILE="state.json"
 MAX_LATEST_LINES=2000
 
 # 3. BACKEND & FRONTEND ADMIN
-PORT=3000
+PORT=3010
 ADMIN_TOKEN="NHAP_MOT_CHUOI_MAT_KHAU_BAT_KY_VAO_DAY_DE_DANG_NHAP"
-FRONTEND_ORIGIN="http://localhost:3000"
+FRONTEND_ORIGIN="http://localhost:3010"
 
 # (Tuỳ chọn) Báo cáo lỗi qua Discord
 DISCORD_WEBHOOK_URL=""
@@ -114,13 +115,13 @@ cd C:\EdenLogBridge\admin-frontend
 npm run build
 cd ..
 
-# Bước 2: Bật Backend Server (Port 3000)
+# Bước 2: Bật Backend Server (Port 3010)
 node server.js
 ```
 > [!TIP]
 > *Để Server Backend chạy nền không tắt khi đóng CMD, bạn có thể dùng `pm2` (`npm install -g pm2` -> `pm2 start server.js`).*
 >
-> *Nên cấu hình Reverse Proxy (Nginx/IIS) hoặc Cloudflare Tunnel để trỏ tên miền về `localhost:3000`.*
+> *Nên cấu hình Reverse Proxy (Nginx/IIS) hoặc Cloudflare Tunnel để trỏ tên miền về `localhost:3010`.*
 
 ---
 
@@ -129,7 +130,7 @@ node server.js
 - **Không bao giờ public file `.env`**: Nó chứa App Password của Nextcloud.
 - **Không để Frontend biết NC_PASS**: Đó là lý do mọi kết nối WebDAV đều chạy ngầm qua Backend. Frontend chỉ dùng `ADMIN_TOKEN`.
 - **Dùng HTTPS**: Nếu mở public ra Internet, BẮT BUỘC dùng HTTPS/SSL để tránh bị chặn bắt chuỗi Token.
-- **Windows Firewall**: Chỉ mở port 3000 nếu thực sự cần thiết, tốt nhất là xài Cloudflare Tunnel để không mở port.
+- **Windows Firewall**: Chỉ mở port 3010 nếu thực sự cần thiết, tốt nhất là xài Cloudflare Tunnel để không mở port.
 - **Lộ Token?**: Nếu nghi ngờ lộ `NC_PASS`, hãy vào Nextcloud xoá App Password cũ và cấp cái mới ngay lập tức.
 
 ---
