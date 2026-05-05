@@ -170,9 +170,17 @@ async function processFile(filePath, state, adapter) {
     if (!fs.existsSync(config.localWorkDir)) fs.mkdirSync(config.localWorkDir, { recursive: true });
 
     const fileNameBase = path.basename(filePath, path.extname(filePath));
-    const d = stats.mtime; // Lấy ngày giờ chỉnh sửa thực tế của file
-    const dateStr = d.toISOString().split('T')[0];
-    const hourStr = String(d.getUTCHours()).padStart(2, '0');
+    
+    let d = stats.mtime; // Lấy ngày giờ chỉnh sửa thực tế của file làm mặc định
+    let dateStr = d.toISOString().split('T')[0];
+    let hourStr = String(d.getUTCHours()).padStart(2, '0');
+
+    // Cố gắng trích xuất ngày giờ gốc từ tên file Zomboid (vd: 2026-05-03_19-04_admin)
+    const nameMatch = fileNameBase.match(/^(\d{4}-\d{2}-\d{2})_(\d{2})-\d{2}_/);
+    if (nameMatch) {
+        dateStr = nameMatch[1]; // 2026-05-03
+        hourStr = nameMatch[2]; // 19
+    }
     
     const remoteHourlyDir = `${config.remoteBase}/hourly/${dateStr}`;
     const remoteHourlyPath = `${remoteHourlyDir}/${fileNameBase}_${hourStr}.log`;
