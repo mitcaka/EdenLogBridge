@@ -15,7 +15,7 @@ try {
 const app = express();
 
 const config = {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 3010,
     adminToken: process.env.ADMIN_TOKEN,
     frontendOrigin: process.env.FRONTEND_ORIGIN || '*',
     remoteBase: process.env.REMOTE_BASE || 'pz-logs/eden'
