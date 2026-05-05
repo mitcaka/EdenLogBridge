@@ -229,7 +229,7 @@ const frontendPath = path.join(__dirname, 'admin-frontend', 'out');
 app.use(express.static(frontendPath));
 
 // Fallback for React/Next.js Client-Side Routing
-app.get('*', (req, res, next) => {
+app.get(/.*/, (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
