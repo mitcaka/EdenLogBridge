@@ -60,16 +60,49 @@ export default function AdminApp() {
   const [hourlyFiles, setHourlyFiles] = useState<string[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("eden_admin_token");
+    const saved = localStorage.getItem("eden_admin_session");
     if (saved) {
-      setToken(saved);
-      setIsLogged(true);
+      try {
+        const session = JSON.parse(saved);
+        if (Date.now() < session.expiresAt) {
+          setToken(session.token);
+          setIsLogged(true);
+        } else {
+          localStorage.removeItem("eden_admin_session");
+        }
+      } catch (e) {
+        localStorage.removeItem("eden_admin_session");
+      }
     }
   }, []);
 
   const apiFetch = async (endpoint: string, isJson = true) => {
+    let currentToken = token;
+    // Đọc token trực tiếp từ localStorage để tránh lỗi bất đồng bộ khi F5
+    const saved = localStorage.getItem("eden_admin_session");
+    if (saved) {
+      try {
+        const session = JSON.parse(saved);
+        if (Date.now() > session.expiresAt) {
+          handleLogout();
+          throw new Error("Session expired");
+        }
+        currentToken = session.token;
+        // Tự động gia hạn thêm 1 tiếng mỗi khi có thao tác
+        session.expiresAt = Date.now() + 60 * 60 * 1000;
+        localStorage.setItem("eden_admin_session", JSON.stringify(session));
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    if (!currentToken) {
+      handleLogout();
+      throw new Error("Unauthorized: No token");
+    }
+
     const res = await fetch(`${API_BASE}${endpoint}`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { "Authorization": `Bearer ${currentToken}` }
     });
     if (res.status === 401 || res.status === 403) {
       handleLogout();
@@ -87,7 +120,11 @@ export default function AdminApp() {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
-        localStorage.setItem("eden_admin_token", token);
+        const sessionData = {
+          token: token,
+          expiresAt: Date.now() + 60 * 60 * 1000 // 1 hour
+        };
+        localStorage.setItem("eden_admin_session", JSON.stringify(sessionData));
         setIsLogged(true);
         setActiveTab("dashboard");
       } else {
@@ -99,7 +136,7 @@ export default function AdminApp() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("eden_admin_token");
+    localStorage.removeItem("eden_admin_session");
     setIsLogged(false);
     setToken("");
   };
