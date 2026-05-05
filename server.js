@@ -195,7 +195,6 @@ app.get('/api/logs/hourly/:date/:file', async (req, res, next) => {
 // 8. GET Search log (Memory efficient streaming, Multi-file partial match)
 app.get('/api/logs/search', async (req, res, next) => {
     const { q, date, file } = req.query;
-    if (!q) return res.status(400).json({ error: 'Missing search query "q"' });
     if (!date || !isValidDate(date)) return res.status(400).json({ error: 'Missing or invalid "date"' });
     if (!file) return res.status(400).json({ error: 'Missing "file" keyword' });
 
@@ -214,6 +213,12 @@ app.get('/api/logs/search', async (req, res, next) => {
 
         if (matchedFiles.length === 0) {
             return res.json({ results: [], total_matched: 0, message: "No files matched your file keyword" });
+        }
+
+        // Nếu KHÔNG có từ khoá tìm kiếm nội dung (q), chỉ trả về danh sách file
+        if (!q || q.trim() === '') {
+            const results = matchedFiles.map(fileName => ({ file: fileName, line: '-', text: `Match file: ${fileName}` }));
+            return res.json({ results, total_matched: results.length });
         }
 
         const results = [];

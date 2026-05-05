@@ -45,6 +45,7 @@ export default function AdminApp() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [logContent, setLogContent] = useState("");
   const [refreshInterval, setRefreshInterval] = useState(0); // 0 = off, 30, 60
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   // Dashboard state
   const [health, setHealth] = useState({ backend: "", storage: "" });
@@ -197,7 +198,7 @@ export default function AdminApp() {
   };
 
   const handleSearch = async () => {
-    if (!searchDate || !searchQuery || !searchFile) return alert("Vui lòng nhập đủ thông tin (Keyword, Date, File)");
+    if (!searchDate || !searchFile) return alert("Vui lòng nhập tên File và Ngày cần tìm kiếm.");
     try {
       setSearchResults([]);
       const data = await apiFetch(`/logs/search?q=${encodeURIComponent(searchQuery)}&date=${searchDate}&file=${encodeURIComponent(searchFile)}`, true);
@@ -287,19 +288,38 @@ export default function AdminApp() {
 
   return (
     <div className="app-container">
-      <div className="sidebar">
-        <h3 style={{ margin: "0 1rem 1rem 1rem", color: "var(--accent-color)" }}>Eden Bridge</h3>
-        <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
-        {/* Tạm ẩn các tab chưa dùng
-        <button className={activeTab === "console" ? "active" : ""} onClick={() => setActiveTab("console")}>Latest Console</button>
-        <button className={activeTab === "errors" ? "active" : ""} onClick={() => setActiveTab("errors")}>Latest Errors</button>
-        <button className={activeTab === "warnings" ? "active" : ""} onClick={() => setActiveTab("warnings")}>Latest Warnings</button>
-        */}
-        <button className={activeTab === "hourly" ? "active" : ""} onClick={() => setActiveTab("hourly")}>Hourly Logs</button>
-        <button className={activeTab === "search" ? "active" : ""} onClick={() => setActiveTab("search")}>Search</button>
-        <button className={activeTab === "archive" ? "active" : ""} onClick={() => setActiveTab("archive")}>Archive</button>
+      <div className={`sidebar ${isSidebarOpen ? '' : 'collapsed'}`}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
+          <h3 style={{ margin: 0, color: "var(--accent-color)" }}>Eden Bridge</h3>
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="btn" style={{ padding: '0.2rem 0.5rem', margin: 0, background: 'transparent', border: 'none' }}>
+            {isSidebarOpen ? '◀' : '▶'}
+          </button>
+        </div>
+        
+        <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>
+          <span className="icon">📊</span>
+          <span className="tab-text">Dashboard</span>
+        </button>
+        
+        {/* Tạm ẩn các tab chưa dùng */}
+        
+        <button className={activeTab === "hourly" ? "active" : ""} onClick={() => setActiveTab("hourly")}>
+          <span className="icon">🕒</span>
+          <span className="tab-text">Hourly Logs</span>
+        </button>
+        <button className={activeTab === "search" ? "active" : ""} onClick={() => setActiveTab("search")}>
+          <span className="icon">🔍</span>
+          <span className="tab-text">Search</span>
+        </button>
+        <button className={activeTab === "archive" ? "active" : ""} onClick={() => setActiveTab("archive")}>
+          <span className="icon">📦</span>
+          <span className="tab-text">Archive</span>
+        </button>
         <div style={{ flex: 1 }}></div>
-        <button onClick={handleLogout} style={{ color: "var(--danger-color)" }}>Logout</button>
+        <button onClick={handleLogout} style={{ color: "var(--danger-color)" }}>
+          <span className="icon">🚪</span>
+          <span className="tab-text">Logout</span>
+        </button>
       </div>
 
       <div className="main-content">

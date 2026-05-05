@@ -1,12 +1,13 @@
 :root {
-  --bg-color: #121212;
-  --text-color: #e0e0e0;
-  --sidebar-bg: #1e1e1e;
-  --border-color: #333;
-  --accent-color: #bb86fc;
-  --danger-color: #cf6679;
-  --warn-color: #f6a100;
-  --log-bg: #0d0d0d;
+  --bg-color: #f5f5f5;
+  --text-color: #333333;
+  --sidebar-bg: #ffffff;
+  --border-color: #dddddd;
+  --accent-color: #0078d4;
+  --danger-color: #d13438;
+  --warn-color: #ffaa44;
+  --log-bg: #002b36;
+  --log-text: #839496;
 }
 
 * { box-sizing: border-box; }
@@ -51,6 +52,18 @@ body {
     height: 100vh;
     position: sticky;
     top: 0;
+    transition: width 0.3s ease;
+  }
+  .sidebar.collapsed {
+    width: 70px;
+    padding: 1rem 0.5rem;
+  }
+  .sidebar.collapsed button {
+    justify-content: center;
+    padding: 0.75rem 0;
+  }
+  .sidebar.collapsed .tab-text, .sidebar.collapsed h3 {
+    display: none;
   }
 }
 
@@ -64,11 +77,15 @@ body {
   border-radius: 4px;
   white-space: nowrap;
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .sidebar button:hover, .sidebar button.active {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
   color: var(--accent-color);
+  font-weight: 500;
 }
 
 .main-content {
@@ -100,14 +117,14 @@ body {
   margin-bottom: 1rem;
   background: var(--bg-color);
   border: 1px solid var(--border-color);
-  color: white;
+  color: var(--text-color);
   border-radius: 4px;
 }
 .login-box button {
   width: 100%;
   padding: 0.8rem;
   background-color: var(--accent-color);
-  color: #000;
+  color: #fff;
   border: none;
   font-weight: bold;
   border-radius: 4px;
@@ -116,12 +133,13 @@ body {
 
 .log-viewer-container {
   background-color: var(--log-bg);
+  color: var(--log-text);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 1rem;
   overflow-x: auto;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   line-height: 1.5;
   height: calc(100vh - 180px);
   overflow-y: auto;
@@ -130,10 +148,10 @@ body {
 .log-line {
   white-space: pre-wrap;
   word-break: break-all;
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   padding: 2px 0;
 }
-.log-line:hover { background-color: #1a1a1a; }
+.log-line:hover { background-color: rgba(255, 255, 255, 0.05); }
 .hl-error { color: var(--danger-color); font-weight: bold; }
 .hl-warn { color: var(--warn-color); font-weight: bold; }
 .hl-sqlite { color: #5bc0de; }
@@ -148,9 +166,9 @@ body {
   cursor: pointer;
   margin-right: 0.5rem;
 }
-.btn:hover { background: #333; }
+.btn:hover { background: rgba(0,0,0,0.05); }
 .input {
-  background: var(--log-bg);
+  background: var(--sidebar-bg);
   color: var(--text-color);
   border: 1px solid var(--border-color);
   padding: 0.5rem;
