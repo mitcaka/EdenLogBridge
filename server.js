@@ -75,7 +75,7 @@ function requireAuth(req, res, next) {
 
 // Validation Utils
 function isValidDate(d) {
-    return /^\\d{4}-\\d{2}-\\d{2}$/.test(d);
+    return /^\d{4}-\d{2}-\d{2}$/.test(d);
 }
 
 function isSafeFilename(f) {
