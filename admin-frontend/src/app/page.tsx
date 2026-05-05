@@ -59,6 +59,7 @@ export default function AdminApp() {
   const [searchFile, setSearchFile] = useState("server-console.txt"); // default for PZ
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Hourly state
   const [hourlyDate, setHourlyDate] = useState("");
@@ -221,12 +222,15 @@ export default function AdminApp() {
 
   const handleSearch = async () => {
     if (!searchDate || !searchFile) return alert("Vui lòng nhập tên File và Ngày cần tìm kiếm.");
+    setIsSearching(true);
     try {
       setSearchResults([]);
       const data = await apiFetch(`/logs/search?q=${encodeURIComponent(searchQuery)}&date=${searchDate}&file=${encodeURIComponent(searchFile)}`, true);
       setSearchResults(data.results || []);
     } catch (err) {
       alert("Lỗi khi tìm kiếm");
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -432,18 +436,27 @@ export default function AdminApp() {
               </select>
               <input type="text" className="input" value={searchFile} onChange={e => setSearchFile(e.target.value)} placeholder="Tên gần đúng file log (vd: admin)" />
               <input type="text" className="input input-flexible" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Từ khoá cần tìm..." />
-              <button className="btn" onClick={handleSearch} style={{ width: "100%", maxWidth: "150px" }}>Tìm Kiếm</button>
+              <button className="btn" onClick={handleSearch} disabled={isSearching} style={{ width: "100%", maxWidth: "150px" }}>
+                {isSearching ? "Đang tìm..." : "Tìm Kiếm"}
+              </button>
             </div>
             <div className="card">
               <h4>Kết quả tìm kiếm ({searchResults.length}):</h4>
-              <div style={{ maxHeight: "60vh", overflowY: "auto", fontFamily: "monospace", fontSize: "0.9rem" }}>
-                {searchResults.map((res: any, i) => (
-                  <div key={i} style={{ borderBottom: "1px solid #333", padding: "0.5rem 0" }}>
-                    <span style={{ color: "var(--accent-color)", marginRight: "1rem" }}>[{res.file}] Line {res.line}</span>
-                    {highlightLog(res.text)}
-                  </div>
-                ))}
-              </div>
+              {isSearching ? (
+                <div style={{ padding: "1rem", color: "var(--accent-color)", fontStyle: "italic", textAlign: "center" }}>
+                  ⏳ Đang quét dữ liệu từ máy chủ, vui lòng đợi...
+                </div>
+              ) : (
+                <div style={{ maxHeight: "60vh", overflowY: "auto", fontFamily: "monospace", fontSize: "0.9rem" }}>
+                  {searchResults.map((res: any, i) => (
+                    <div key={i} style={{ borderBottom: "1px solid #333", padding: "0.5rem 0" }}>
+                      <span style={{ color: "var(--accent-color)", marginRight: "1rem" }}>[{res.file}] Line {res.line}</span>
+                      {highlightLog(res.text)}
+                    </div>
+                  ))}
+                  {searchResults.length === 0 && <div style={{ color: "#666", padding: "1rem" }}>Không có kết quả.</div>}
+                </div>
+              )}
             </div>
           </div>
         )}

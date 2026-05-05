@@ -151,7 +151,8 @@ body {
   padding: 1rem;
   overflow-x: auto;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 500;
   line-height: 1.5;
   height: calc(100vh - 180px);
   overflow-y: auto;
@@ -266,14 +267,15 @@ body {
     flex-direction: row;
     align-items: center;
     flex-wrap: wrap;
+    gap: 1rem;
   }
   .search-controls .input {
-    width: 200px;
-    margin-right: 0.5rem;
+    width: 260px;
+    margin-right: 0;
   }
   .search-controls .input-flexible {
     flex: 1;
     min-width: 200px;
-    margin-right: 0.5rem;
+    margin-right: 0;
   }
 }
