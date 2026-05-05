@@ -228,13 +228,6 @@ async function processFile(filePath, state, adapter) {
                 await adapter.uploadAtomic(Buffer.from(warnText), remoteLatestWarn);
             }
 
-            // 4. Archive (nếu bật)
-            // Tạo zip và lưu vào thư mục archive
-            if (config.enableArchive && hourStr === '00' && d.getUTCMinutes() < 15) {
-               // Logic archive có thể gom các file log ngày hôm trước. 
-               // (Để rút gọn, bỏ qua phần tìm file cũ, chỉ demo lệnh zip)
-            }
-
         } catch (err) {
             logError(`Upload WebDAV thất bại cho ${filePath}: ${err.message}`);
             return; // THẤT BẠI -> KHÔNG CẬP NHẬT STATE
@@ -274,6 +267,73 @@ WebdavAdapter.prototype.uploadAtomic = async function(content, remotePath) {
         throw err;
     }
 };
+
+async function runArchiveJob(adapter, state) {
+    if (!config.pzLogDir || !fs.existsSync(config.pzLogDir)) return;
+
+    const todayDate = new Date();
+    // Lấy ngày hiện tại
+    const todayStr = todayDate.toISOString().split('T')[0];
+    const files = fs.readdirSync(config.pzLogDir);
+    
+    // Gom nhóm file theo ngày
+    const groups = {};
+    for (const file of files) {
+        const match = file.match(/^(\d{4}-\d{2}-\d{2})_(\d{2})-\d{2}_/);
+        if (match) {
+            const fileDate = match[1];
+            // Chỉ nén các file của NHỮNG NGÀY TRƯỚC (không nén file hôm nay đang chạy)
+            if (fileDate < todayStr) {
+                if (!groups[fileDate]) groups[fileDate] = [];
+                groups[fileDate].push(path.join(config.pzLogDir, file));
+            }
+        }
+    }
+
+    if (Object.keys(groups).length === 0) return;
+
+    if (!fs.existsSync(config.localWorkDir)) fs.mkdirSync(config.localWorkDir, { recursive: true });
+
+    for (const [archiveDate, filePaths] of Object.entries(groups)) {
+        logInfo(`[Archive] Bắt đầu xử lý nén cho ngày ${archiveDate} (${filePaths.length} file)`);
+        
+        const zipName = `${archiveDate}.zip`;
+        const zipLocalPath = path.join(config.localWorkDir, zipName);
+        const remoteArchivePath = `${config.remoteBase}/archive/${zipName}`;
+
+        try {
+            if (!config.isDryRun) {
+                if (fs.existsSync(zipLocalPath)) fs.unlinkSync(zipLocalPath);
+                zipFiles(filePaths, zipLocalPath);
+            } else {
+                logInfo(`[DRY-RUN] Sẽ nén ${filePaths.length} file vào ${zipLocalPath}`);
+            }
+
+            if (!config.isDryRun && fs.existsSync(zipLocalPath)) {
+                await adapter.ensureDirRecursive(`${config.remoteBase}/archive`);
+                await adapter.uploadAtomic(zipLocalPath, remoteArchivePath);
+                logInfo(`[Archive] Đã đẩy thành công ${zipName} lên Nextcloud.`);
+            }
+
+            if (!config.isDryRun) {
+                // Xóa file gốc trên VPS để giải phóng ổ cứng
+                for (const fp of filePaths) {
+                    try {
+                        fs.unlinkSync(fp);
+                        delete state[fp]; // Dọn dẹp khỏi state
+                        logInfo(`[Archive] Đã xóa file gốc trên VPS: ${fp}`);
+                    } catch (err) {
+                        logWarn(`[Archive] Không thể xóa file ${fp}: ${err.message}`);
+                    }
+                }
+                // Xóa file tạm
+                if (fs.existsSync(zipLocalPath)) fs.unlinkSync(zipLocalPath);
+            }
+        } catch (err) {
+            logError(`[Archive] Lỗi quá trình archive ngày ${archiveDate}: ${err.message}`);
+        }
+    }
+}
 
 async function main() {
     logInfo('--- BẮT ĐẦU EDEN LOG BRIDGE SYNC ---');
@@ -322,6 +382,17 @@ async function main() {
 
     for (const filePath of allFiles) {
         await processFile(filePath, state, adapter);
+    }
+
+    // Chạy dọn dẹp Archive 1 lần mỗi ngày (từ 1h sáng)
+    if (config.enableArchive) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const currentHour = new Date().getHours();
+        
+        if (state.last_archive_date !== todayStr && currentHour >= 1) {
+            await runArchiveJob(adapter, state);
+            state.last_archive_date = todayStr;
+        }
     }
 
     saveState(state);
