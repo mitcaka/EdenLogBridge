@@ -142,11 +142,11 @@ app.get('/api/logs/latest/:type', async (req, res, next) => {
 // GET Available dates
 app.get('/api/logs/dates', async (req, res, next) => {
     try {
-        const remotePath = `${config.remoteBase}/hourly`;
+        const remotePath = `${config.remoteBase}/hourly/`;
         const items = await adapter.list(remotePath);
         const dates = items
             .map(href => decodeURIComponent(href))
-            .map(p => path.basename(p))
+            .map(p => path.basename(p.trim()).trim())
             .filter(name => name !== 'hourly' && isValidDate(name))
             .sort().reverse(); // Mới nhất lên đầu
         res.json({ dates });
@@ -159,17 +159,17 @@ app.get('/api/logs/dates', async (req, res, next) => {
 // 6. GET Hourly logs by date
 app.get('/api/logs/hourly', async (req, res, next) => {
     const { date } = req.query;
-    if (!date || !isValidDate(date)) return res.status(400).json({ error: 'Invalid date format YYYY-MM-DD' });
+    if (!date || !isValidDate(date.trim())) return res.status(400).json({ error: 'Invalid date format YYYY-MM-DD' });
 
-    const remotePath = `${config.remoteBase}/hourly/${date}`;
+    const remotePath = `${config.remoteBase}/hourly/${date.trim()}/`;
     try {
         const files = await adapter.list(remotePath);
         // Trả về danh sách tên file, bỏ thư mục gốc
         const fileNames = files
             .map(href => decodeURIComponent(href))
-            .map(p => path.basename(p))
-            .filter(name => name !== date); 
-        res.json({ date, files: fileNames });
+            .map(p => path.basename(p.trim()).trim())
+            .filter(name => name !== date.trim()); 
+        res.json({ date: date.trim(), files: fileNames });
     } catch (err) {
         if (err.status === 404) return res.json({ date, files: [] }); // Thư mục trống/chưa có
         next(err);
