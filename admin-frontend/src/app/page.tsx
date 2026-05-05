@@ -290,9 +290,11 @@ export default function AdminApp() {
       <div className="sidebar">
         <h3 style={{ margin: "0 1rem 1rem 1rem", color: "var(--accent-color)" }}>Eden Bridge</h3>
         <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
+        {/* Tạm ẩn các tab chưa dùng
         <button className={activeTab === "console" ? "active" : ""} onClick={() => setActiveTab("console")}>Latest Console</button>
         <button className={activeTab === "errors" ? "active" : ""} onClick={() => setActiveTab("errors")}>Latest Errors</button>
         <button className={activeTab === "warnings" ? "active" : ""} onClick={() => setActiveTab("warnings")}>Latest Warnings</button>
+        */}
         <button className={activeTab === "hourly" ? "active" : ""} onClick={() => setActiveTab("hourly")}>Hourly Logs</button>
         <button className={activeTab === "search" ? "active" : ""} onClick={() => setActiveTab("search")}>Search</button>
         <button className={activeTab === "archive" ? "active" : ""} onClick={() => setActiveTab("archive")}>Archive</button>
@@ -338,7 +340,7 @@ export default function AdminApp() {
             </div>
             
             <div style={{ display: "flex", gap: "1rem" }}>
-              <div style={{ width: "250px" }} className="card">
+              <div style={{ width: "260px", maxHeight: "70vh", overflowY: "auto" }} className="card">
                 <h4>Danh sách File</h4>
                 {hourlyFiles.map(f => (
                   <div key={f} style={{ marginBottom: "0.5rem" }}>
@@ -368,9 +370,9 @@ export default function AdminApp() {
             <div className="card">
               <h4>Kết quả tìm kiếm ({searchResults.length}):</h4>
               <div style={{ maxHeight: "60vh", overflowY: "auto", fontFamily: "monospace", fontSize: "0.9rem" }}>
-                {searchResults.map((res, i) => (
+                {searchResults.map((res: any, i) => (
                   <div key={i} style={{ borderBottom: "1px solid #333", padding: "0.5rem 0" }}>
-                    <span style={{ color: "var(--accent-color)", marginRight: "1rem" }}>Line {res.line}</span>
+                    <span style={{ color: "var(--accent-color)", marginRight: "1rem" }}>[{res.file}] Line {res.line}</span>
                     {highlightLog(res.text)}
                   </div>
                 ))}

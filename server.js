@@ -192,35 +192,57 @@ app.get('/api/logs/hourly/:date/:file', async (req, res, next) => {
     await streamRemoteFile(remotePath, res, next);
 });
 
-// 8. GET Search log (Memory efficient streaming)
+// 8. GET Search log (Memory efficient streaming, Multi-file partial match)
 app.get('/api/logs/search', async (req, res, next) => {
     const { q, date, file } = req.query;
     if (!q) return res.status(400).json({ error: 'Missing search query "q"' });
     if (!date || !isValidDate(date)) return res.status(400).json({ error: 'Missing or invalid "date"' });
-    if (!file || !isSafeFilename(file)) return res.status(400).json({ error: 'Missing or invalid "file"' });
+    if (!file) return res.status(400).json({ error: 'Missing "file" keyword' });
 
-    const remotePath = `${config.remoteBase}/hourly/${date}/${file}`;
+    const remoteDirPath = `${config.remoteBase}/hourly/${date}/`;
     try {
-        const response = await adapter._request('GET', remotePath, { timeout: 0 });
-        if (!response.ok) return res.status(response.status).json({ error: 'File not found' });
+        // Lấy danh sách tất cả file trong ngày
+        const allFiles = await adapter.list(remoteDirPath);
+        const matchedFiles = allFiles
+            .map(href => decodeURIComponent(href))
+            .map(p => {
+                const parts = p.split('/').filter(Boolean);
+                return parts[parts.length - 1].trim();
+            })
+            // Lọc ra các file KHÔNG phải là folder mẹ và có CHỨA từ khóa file
+            .filter(name => name !== date && name.toLowerCase().includes(file.toLowerCase()));
 
-        const rl = readline.createInterface({
-            input: Readable.fromWeb(response.body),
-            crlfDelay: Infinity
-        });
+        if (matchedFiles.length === 0) {
+            return res.json({ results: [], total_matched: 0, message: "No files matched your file keyword" });
+        }
 
         const results = [];
-        let lineNum = 0;
-        for await (const line of rl) {
-            lineNum++;
-            if (line.toLowerCase().includes(q.toLowerCase())) {
-                results.push({ line: lineNum, text: line });
+        // Lặp qua từng file để tải và tìm kiếm (tuần tự để tiết kiệm RAM)
+        for (const fileName of matchedFiles) {
+            const remotePath = `${config.remoteBase}/hourly/${date}/${fileName}`;
+            const response = await adapter._request('GET', remotePath, { timeout: 0 });
+            if (!response.ok) continue;
+
+            const rl = readline.createInterface({
+                input: Readable.fromWeb(response.body),
+                crlfDelay: Infinity
+            });
+
+            let lineNum = 0;
+            for await (const line of rl) {
+                lineNum++;
+                if (line.toLowerCase().includes(q.toLowerCase())) {
+                    // Thêm trường file để frontend hiển thị
+                    results.push({ file: fileName, line: lineNum, text: line });
+                }
+                if (results.length >= 1000) break; // Giới hạn tổng số lượng kết quả
             }
-            if (results.length >= 1000) break; // Giới hạn trả về 1000 kết quả đầu tiên
+            if (results.length >= 1000) break;
         }
+
         res.json({ results, total_matched: results.length });
     } catch (err) {
-        if (err.status === 404) return res.status(404).json({ error: 'Log file not found' });
+        if (err.status === 404) return res.status(404).json({ error: 'Folder or files not found' });
         next(err);
     }
 });
