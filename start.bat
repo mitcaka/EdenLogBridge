@@ -16,8 +16,8 @@ call npm run build
 cd ..
 echo.
 
-echo [3/3] Dang tat cac phien ban Server cu (Neu co) de giai phong Port...
-taskkill /F /IM node.exe >nul 2>&1
+echo [3/3] Dang tat cac phien ban Server cu (Neu co) de giai phong Port 3010...
+FOR /F "tokens=5" %%T IN ('netstat -aon ^| find ":3010" ^| find "LISTENING"') DO taskkill /F /PID %%T >nul 2>&1
 echo.
 
 echo [4/4] Thanh cong! Dang khoi dong Server (Backend) moi nhat...
