@@ -32,8 +32,8 @@ class WebdavAdapter {
     _encodePath(remotePath) {
         // Thay thế \ thành /
         const normalizedPath = remotePath.replace(/\\/g, '/');
-        // Tránh bị dính // hoặc dấu / đầu chuỗi gây lỗi URL
-        const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
+        // Loại bỏ hoàn toàn dấu gạch chéo kép (//) và gạch chéo ở đầu chuỗi
+        const cleanPath = normalizedPath.replace(/\/+/g, '/').replace(/^\//, '');
         return cleanPath.split('/').map(part => encodeURIComponent(part)).join('/');
     }
 
