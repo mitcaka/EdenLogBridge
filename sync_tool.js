@@ -171,22 +171,16 @@ async function processFile(filePath, state, adapter) {
 
     const fileNameBase = path.basename(filePath, path.extname(filePath));
     
-    let d = stats.mtime; // Lấy ngày giờ chỉnh sửa thực tế của file làm mặc định
-    let dateStr = d.toISOString().split('T')[0];
-    let hourStr = String(d.getUTCHours()).padStart(2, '0');
+    const now = new Date();
+    // Bắt buộc lấy ngày giờ HIỆN TẠI lúc sync để phân loại vào đúng ngày thực tế thay vì ngày tạo file
+    let dateStr = now.toISOString().split('T')[0];
+    let hourStr = String(now.getUTCHours()).padStart(2, '0');
 
-    // Cố gắng trích xuất ngày giờ gốc từ tên file Zomboid (vd: 2026-05-03_19-04_admin)
-    const nameMatch = fileNameBase.match(/^(\d{4}-\d{2}-\d{2})_(\d{2})-\d{2}_/);
-    if (nameMatch) {
-        dateStr = nameMatch[1]; // 2026-05-03
-        hourStr = nameMatch[2]; // 19
-    }
+    // Loại bỏ tiền tố ngày giờ cũ khỏi tên file (vd: từ 2026-05-03_19-04_admin -> admin)
+    const genericNameBase = fileNameBase.replace(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_/, '');
     
     const remoteHourlyDir = `${config.remoteBase}/hourly/${dateStr}`;
-    const remoteHourlyPath = `${remoteHourlyDir}/${fileNameBase}_${hourStr}.log`;
-    
-    // Loại bỏ tiền tố ngày giờ để tạo tên gốc (vd: từ 2026-05-03_19-04_admin -> admin)
-    const genericNameBase = fileNameBase.replace(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_/, '');
+    const remoteHourlyPath = `${remoteHourlyDir}/${genericNameBase}_${hourStr}.log`;
     const genericFileName = genericNameBase + path.extname(filePath);
 
     const remoteLatestDir = `${config.remoteBase}/latest`;
@@ -207,8 +201,8 @@ async function processFile(filePath, state, adapter) {
             // Do WebDAV PUT ghi đè, nếu ta lưu file `HH.log`, lần sync thứ 2 trong giờ sẽ xoá mất lần 1.
             // Giải pháp: Gắn thêm timestamp vào tên file hoặc append local rồi mới upload.
             // Để đơn giản và an toàn nhất, append thêm timestamp vào tên: `_HH_MM_SS.log`.
-            const mmss = String(d.getUTCMinutes()).padStart(2, '0') + String(d.getUTCSeconds()).padStart(2, '0');
-            const incrementalHourlyPath = `${remoteHourlyDir}/${fileNameBase}_${hourStr}_${mmss}.log`;
+            const mmss = String(now.getUTCMinutes()).padStart(2, '0') + String(now.getUTCSeconds()).padStart(2, '0');
+            const incrementalHourlyPath = `${remoteHourlyDir}/${genericNameBase}_${hourStr}_${mmss}.log`;
             
             await adapter.uploadText(newLogText, incrementalHourlyPath);
 
