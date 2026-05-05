@@ -400,7 +400,7 @@ export default function AdminApp() {
                 <option value="">-- Chọn ngày --</option>
                 {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
-              <input type="text" className="input" value={searchFile} onChange={e => setSearchFile(e.target.value)} placeholder="Tên file log (vd: admin)" />
+              <input type="text" className="input" value={searchFile} onChange={e => setSearchFile(e.target.value)} placeholder="Tên gần đúng file log (vd: admin)" />
               <input type="text" className="input input-flexible" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Từ khoá cần tìm..." />
               <button className="btn" onClick={handleSearch} style={{ width: "100%", maxWidth: "150px" }}>Tìm Kiếm</button>
             </div>
