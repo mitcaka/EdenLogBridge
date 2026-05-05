@@ -16,7 +16,11 @@ call npm run build
 cd ..
 echo.
 
-echo [3/3] Thanh cong! Dang khoi dong Server (Backend)...
+echo [3/3] Dang tat cac phien ban Server cu (Neu co) de giai phong Port...
+taskkill /F /IM node.exe >nul 2>&1
+echo.
+
+echo [4/4] Thanh cong! Dang khoi dong Server (Backend) moi nhat...
 echo.
 node server.js
 
