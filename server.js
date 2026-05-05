@@ -240,9 +240,9 @@ app.get('/api/logs/search', async (req, res, next) => {
                     // Thêm trường file để frontend hiển thị
                     results.push({ file: fileName, line: lineNum, text: line });
                 }
-                if (results.length >= 1000) break; // Giới hạn tổng số lượng kết quả
+                if (results.length >= 10000) break; // Giới hạn tổng số lượng kết quả
             }
-            if (results.length >= 1000) break;
+            if (results.length >= 10000) break;
         }
 
         res.json({ results, total_matched: results.length });

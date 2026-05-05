@@ -22,19 +22,36 @@ function highlightLog(text: string) {
 }
 
 const LogViewer = ({ content }: { content: string }) => {
+  const [filterText, setFilterText] = useState("");
+
   if (!content) return <div className="log-viewer-container"><div style={{ color: '#666' }}>No data...</div></div>;
+  
   const lines = content.split('\n');
-  const isTruncated = lines.length > 5000;
-  const displayLines = isTruncated ? lines.slice(0, 5000) : lines;
+  const matchedLines = filterText ? lines.filter(l => l.toLowerCase().includes(filterText.toLowerCase())) : lines;
+  const isTruncated = matchedLines.length > 5000;
+  const displayLines = isTruncated ? matchedLines.slice(0, 5000) : matchedLines;
 
   return (
-    <div className="log-viewer-container">
-      {displayLines.map((line, idx) => (
-        <div key={idx} className="log-line">
-          {highlightLog(line)}
-        </div>
-      ))}
-      {isTruncated && <div className="log-line hl-warn" style={{ marginTop: '1rem' }}>... [Nội dung quá dài đã bị cắt bớt để bảo vệ trình duyệt (Giới hạn 5000 dòng đầu tiên)] ...</div>}
+    <div>
+      <div style={{ marginBottom: '0.5rem' }}>
+        <input 
+          type="text" 
+          className="input" 
+          style={{ width: '100%', border: '1px solid var(--border-color)', background: 'var(--sidebar-bg)' }}
+          placeholder="Lọc nhanh các dòng chứa nội dung (vd: error, exception...)" 
+          value={filterText} 
+          onChange={e => setFilterText(e.target.value)} 
+        />
+      </div>
+      <div className="log-viewer-container" style={{ marginTop: 0 }}>
+        {displayLines.map((line, idx) => (
+          <div key={idx} className="log-line">
+            {highlightLog(line)}
+          </div>
+        ))}
+        {isTruncated && <div className="log-line hl-warn" style={{ marginTop: '1rem' }}>... [Nội dung quá dài đã bị cắt bớt để bảo vệ trình duyệt (Giới hạn 5000 dòng đầu tiên)] ...</div>}
+        {filterText && matchedLines.length === 0 && <div className="log-line" style={{ color: '#666' }}>Không tìm thấy dòng nào khớp với "{filterText}"</div>}
+      </div>
     </div>
   );
 };

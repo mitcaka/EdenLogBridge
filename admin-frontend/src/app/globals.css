@@ -6,8 +6,8 @@
   --accent-color: #0078d4;
   --danger-color: #d13438;
   --warn-color: #ffaa44;
-  --log-bg: #002b36;
-  --log-text: #839496;
+  --log-bg: #ffffff;
+  --log-text: #333333;
 }
 
 * { box-sizing: border-box; }
@@ -148,10 +148,10 @@ body {
 .log-line {
   white-space: pre-wrap;
   word-break: break-all;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   padding: 2px 0;
 }
-.log-line:hover { background-color: rgba(255, 255, 255, 0.05); }
+.log-line:hover { background-color: rgba(0, 0, 0, 0.05); }
 .hl-error { color: var(--danger-color); font-weight: bold; }
 .hl-warn { color: var(--warn-color); font-weight: bold; }
 .hl-sqlite { color: #5bc0de; }
