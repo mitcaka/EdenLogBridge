@@ -289,9 +289,9 @@ export default function AdminApp() {
   return (
     <div className="app-container">
       <div className={`sidebar ${isSidebarOpen ? '' : 'collapsed'}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
+        <div className="sidebar-header">
           <h3 style={{ margin: 0, color: "var(--accent-color)" }}>Eden Bridge</h3>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="btn" style={{ padding: '0.2rem 0.5rem', margin: 0, background: 'transparent', border: 'none' }}>
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="btn sidebar-toggle-btn" style={{ padding: '0.2rem 0.5rem', margin: 0, background: 'transparent', border: 'none' }}>
             {isSidebarOpen ? '◀' : '▶'}
           </button>
         </div>
@@ -352,15 +352,15 @@ export default function AdminApp() {
 
         {activeTab === "hourly" && (
           <div>
-            <div className="controls">
-              <select className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)} style={{ width: "200px", padding: "0.5rem" }}>
+            <div className="search-controls">
+              <select className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)}>
                 <option value="">-- Chọn ngày --</option>
                 {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <div style={{ width: "260px", maxHeight: "70vh", overflowY: "auto" }} className="card">
+            <div className="hourly-container">
+              <div className="card hourly-file-list">
                 <h4>Danh sách File</h4>
                 {hourlyFiles.map(f => (
                   <div key={f} style={{ marginBottom: "0.5rem" }}>
@@ -378,14 +378,14 @@ export default function AdminApp() {
 
         {activeTab === "search" && (
           <div>
-            <div className="controls">
-              <select className="input" value={searchDate} onChange={e => setSearchDate(e.target.value)} style={{ width: "200px", padding: "0.5rem" }}>
+            <div className="search-controls">
+              <select className="input" value={searchDate} onChange={e => setSearchDate(e.target.value)}>
                 <option value="">-- Chọn ngày --</option>
                 {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
-              <input type="text" className="input" value={searchFile} onChange={e => setSearchFile(e.target.value)} placeholder="Tên file log (vd: server-console.txt)" style={{width: "200px"}} />
-              <input type="text" className="input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Từ khoá cần tìm..." />
-              <button className="btn" onClick={handleSearch}>Tìm Kiếm</button>
+              <input type="text" className="input" value={searchFile} onChange={e => setSearchFile(e.target.value)} placeholder="Tên file log (vd: admin)" />
+              <input type="text" className="input input-flexible" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Từ khoá cần tìm..." />
+              <button className="btn" onClick={handleSearch} style={{ width: "100%", maxWidth: "150px" }}>Tìm Kiếm</button>
             </div>
             <div className="card">
               <h4>Kết quả tìm kiếm ({searchResults.length}):</h4>
@@ -405,12 +405,12 @@ export default function AdminApp() {
           <div className="card">
             <h2>Tải Archive (ZIP Backup)</h2>
             <p>Lưu ý: Chỉ những ngày đã qua được bật tính năng Archive bằng PowerShell mới có file Zip để tải.</p>
-            <div className="controls">
-              <select className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)} style={{ width: "200px", padding: "0.5rem" }}>
+            <div className="search-controls">
+              <select className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)}>
                 <option value="">-- Chọn ngày --</option>
                 {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
-              <button className="btn" onClick={downloadArchive} style={{ backgroundColor: "var(--accent-color)", color: "#000" }}>📥 Tải xuống ZIP</button>
+              <button className="btn" onClick={downloadArchive} style={{ backgroundColor: "var(--accent-color)", color: "#fff", width: "100%", maxWidth: "200px" }}>📥 Tải xuống ZIP</button>
             </div>
           </div>
         )}
