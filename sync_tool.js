@@ -21,7 +21,8 @@ const config = {
     maxLatestLines: parseInt(process.env.MAX_LATEST_LINES, 10) || 2000,
     maxErrorLines: parseInt(process.env.MAX_ERROR_LINES, 10) || 300,
     enableArchive: process.env.ENABLE_ARCHIVE === 'true',
-    isDryRun: process.argv.includes('--dry-run')
+    isDryRun: process.argv.includes('--dry-run'),
+    syncAllTime: process.env.SYNC_ALL_TIME === 'true'
 };
 
 function logInfo(msg) { console.log(`[INFO] ${msg}`); }
@@ -291,8 +292,8 @@ async function main() {
         for (const file of dirFiles) {
             try {
                 const stats = fs.statSync(file);
-                // Bộ lọc 24h: Chỉ lấy những file có thay đổi trong 24h gần nhất
-                if (now - stats.mtime.getTime() <= oneDayMs) {
+                // Bộ lọc thời gian: Lấy tất cả nếu SYNC_ALL_TIME=true, ngược lại chỉ lấy trong 24h
+                if (config.syncAllTime || (now - stats.mtime.getTime() <= oneDayMs)) {
                     if (!allFiles.includes(file)) {
                         allFiles.push(file);
                         recentCount++;
