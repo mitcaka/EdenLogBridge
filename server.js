@@ -146,7 +146,10 @@ app.get('/api/logs/dates', async (req, res, next) => {
         const items = await adapter.list(remotePath);
         const dates = items
             .map(href => decodeURIComponent(href))
-            .map(p => path.basename(p.trim()).trim())
+            .map(p => {
+                const parts = p.split('/').filter(Boolean);
+                return parts[parts.length - 1].trim();
+            })
             .filter(name => name !== 'hourly' && isValidDate(name))
             .sort().reverse(); // Mới nhất lên đầu
         res.json({ dates });
@@ -167,7 +170,10 @@ app.get('/api/logs/hourly', async (req, res, next) => {
         // Trả về danh sách tên file, bỏ thư mục gốc
         const fileNames = files
             .map(href => decodeURIComponent(href))
-            .map(p => path.basename(p.trim()).trim())
+            .map(p => {
+                const parts = p.split('/').filter(Boolean);
+                return parts[parts.length - 1].trim();
+            })
             .filter(name => name !== date.trim()); 
         res.json({ date: date.trim(), files: fileNames });
     } catch (err) {
