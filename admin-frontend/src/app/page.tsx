@@ -115,7 +115,11 @@ export default function AdminApp() {
       const text = await apiFetch(`/logs/latest/${type}`, false);
       setLogContent(text);
     } catch (err: any) {
-      setLogContent("Error loading log: " + err.message);
+      if (err.message && err.message.includes("404")) {
+        setLogContent("File log chưa tồn tại (Có thể Server Game chưa chạy hoặc chưa sinh ra lỗi/cảnh báo nào).");
+      } else {
+        setLogContent("Error loading log: " + err.message);
+      }
     }
   };
 
@@ -145,8 +149,12 @@ export default function AdminApp() {
       setLogContent("Loading...");
       const text = await apiFetch(`/logs/hourly/${hourlyDate}/${file}`, false);
       setLogContent(text);
-    } catch (err) {
-      setLogContent("Error");
+    } catch (err: any) {
+      if (err.message && err.message.includes("404")) {
+        setLogContent("File log chưa tồn tại.");
+      } else {
+        setLogContent("Error: " + err.message);
+      }
     }
   };
 

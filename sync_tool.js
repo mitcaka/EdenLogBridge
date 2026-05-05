@@ -170,7 +170,7 @@ async function processFile(filePath, state, adapter) {
     if (!fs.existsSync(config.localWorkDir)) fs.mkdirSync(config.localWorkDir, { recursive: true });
 
     const fileNameBase = path.basename(filePath, path.extname(filePath));
-    const d = new Date();
+    const d = stats.mtime; // Lấy ngày giờ chỉnh sửa thực tế của file
     const dateStr = d.toISOString().split('T')[0];
     const hourStr = String(d.getUTCHours()).padStart(2, '0');
     
