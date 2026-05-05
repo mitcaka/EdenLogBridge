@@ -58,6 +58,7 @@ export default function AdminApp() {
   // Hourly state
   const [hourlyDate, setHourlyDate] = useState("");
   const [hourlyFiles, setHourlyFiles] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("eden_admin_session");
@@ -234,6 +235,21 @@ export default function AdminApp() {
     }
   }, [activeTab, refreshInterval]);
 
+  // Lấy danh sách ngày có sẵn khi đăng nhập thành công
+  useEffect(() => {
+    if (isLogged) {
+      apiFetch('/logs/dates', true)
+        .then(data => {
+          setAvailableDates(data.dates || []);
+          if (data.dates && data.dates.length > 0) {
+            setHourlyDate(data.dates[0]); // Mặc định chọn ngày mới nhất
+            setSearchDate(data.dates[0]);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isLogged]);
+
   // Tab switching side effects
   useEffect(() => {
     if (activeTab === "dashboard") fetchDashboard();
@@ -241,6 +257,13 @@ export default function AdminApp() {
     if (activeTab === "warnings") fetchLog("warnings");
     if (activeTab === "console") fetchLog("console");
   }, [activeTab]);
+
+  // Tự động tải danh sách file khi đổi ngày ở tab hourly
+  useEffect(() => {
+    if (activeTab === "hourly" && hourlyDate) {
+      fetchHourlyFiles();
+    }
+  }, [hourlyDate, activeTab]);
 
   if (!isLogged) {
     return (
@@ -308,8 +331,10 @@ export default function AdminApp() {
         {activeTab === "hourly" && (
           <div>
             <div className="controls">
-              <input type="date" className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)} />
-              <button className="btn" onClick={fetchHourlyFiles}>Lấy Danh Sách</button>
+              <select className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)} style={{ width: "200px", padding: "0.5rem" }}>
+                <option value="">-- Chọn ngày --</option>
+                {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
             </div>
             
             <div style={{ display: "flex", gap: "1rem" }}>
@@ -332,7 +357,10 @@ export default function AdminApp() {
         {activeTab === "search" && (
           <div>
             <div className="controls">
-              <input type="date" className="input" value={searchDate} onChange={e => setSearchDate(e.target.value)} />
+              <select className="input" value={searchDate} onChange={e => setSearchDate(e.target.value)} style={{ width: "200px", padding: "0.5rem" }}>
+                <option value="">-- Chọn ngày --</option>
+                {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
               <input type="text" className="input" value={searchFile} onChange={e => setSearchFile(e.target.value)} placeholder="Tên file log (vd: server-console.txt)" style={{width: "200px"}} />
               <input type="text" className="input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Từ khoá cần tìm..." />
               <button className="btn" onClick={handleSearch}>Tìm Kiếm</button>
@@ -356,7 +384,10 @@ export default function AdminApp() {
             <h2>Tải Archive (ZIP Backup)</h2>
             <p>Lưu ý: Chỉ những ngày đã qua được bật tính năng Archive bằng PowerShell mới có file Zip để tải.</p>
             <div className="controls">
-              <input type="date" className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)} />
+              <select className="input" value={hourlyDate} onChange={e => setHourlyDate(e.target.value)} style={{ width: "200px", padding: "0.5rem" }}>
+                <option value="">-- Chọn ngày --</option>
+                {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
               <button className="btn" onClick={downloadArchive} style={{ backgroundColor: "var(--accent-color)", color: "#000" }}>📥 Tải xuống ZIP</button>
             </div>
           </div>

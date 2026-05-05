@@ -139,6 +139,23 @@ app.get('/api/logs/latest/:type', async (req, res, next) => {
     await streamRemoteFile(remotePath, res, next);
 });
 
+// GET Available dates
+app.get('/api/logs/dates', async (req, res, next) => {
+    try {
+        const remotePath = `${config.remoteBase}/hourly`;
+        const items = await adapter.list(remotePath);
+        const dates = items
+            .map(href => decodeURIComponent(href))
+            .map(p => path.basename(p))
+            .filter(name => name !== 'hourly' && isValidDate(name))
+            .sort().reverse(); // Mới nhất lên đầu
+        res.json({ dates });
+    } catch (err) {
+        if (err.status === 404) return res.json({ dates: [] });
+        next(err);
+    }
+});
+
 // 6. GET Hourly logs by date
 app.get('/api/logs/hourly', async (req, res, next) => {
     const { date } = req.query;
