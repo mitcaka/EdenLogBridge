@@ -64,8 +64,18 @@ export default function AdminApp() {
   const [hourlyDate, setHourlyDate] = useState("");
   const [hourlyFiles, setHourlyFiles] = useState<string[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [selectedFile, setSelectedFile] = useState("");
+
+  // Theme state
+  const [theme, setTheme] = useState("light");
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("eden_theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
     const saved = localStorage.getItem("eden_admin_session");
     if (saved) {
       try {
@@ -147,6 +157,13 @@ export default function AdminApp() {
     setToken("");
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("eden_theme", newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(logContent);
     alert("Copied to clipboard!");
@@ -188,6 +205,7 @@ export default function AdminApp() {
   };
 
   const fetchHourlyLog = async (file: string) => {
+    setSelectedFile(file);
     try {
       setLogContent("Loading...");
       const text = await apiFetch(`/logs/hourly/${hourlyDate}/${file}`, false);
@@ -320,6 +338,10 @@ export default function AdminApp() {
           <span className="tab-text">Archive</span>
         </button>
         <div style={{ flex: 1 }}></div>
+        <button onClick={toggleTheme}>
+          <span className="icon">{theme === "light" ? "🌙" : "☀️"}</span>
+          <span className="tab-text">{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+        </button>
         <button onClick={handleLogout} style={{ color: "var(--danger-color)" }}>
           <span className="icon">🚪</span>
           <span className="tab-text">Logout</span>
@@ -383,7 +405,13 @@ export default function AdminApp() {
                 <h4 style={{ marginTop: 0 }}>Danh sách File</h4>
                 {hourlyFiles.map(f => (
                   <div key={f} style={{ marginBottom: "0.5rem" }}>
-                    <button className="btn" style={{ width: "100%", textAlign: "left" }} onClick={() => fetchHourlyLog(f)}>📄 {f}</button>
+                    <button 
+                      className={`btn ${f === selectedFile ? 'btn-active' : ''}`} 
+                      style={{ width: "100%", textAlign: "left" }} 
+                      onClick={() => fetchHourlyLog(f)}
+                    >
+                      📄 {f}
+                    </button>
                   </div>
                 ))}
                 {hourlyFiles.length === 0 && <p style={{color: '#666'}}>Chưa có file nào...</p>}
