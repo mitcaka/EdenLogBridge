@@ -185,10 +185,14 @@ async function processFile(filePath, state, adapter) {
     const remoteHourlyDir = `${config.remoteBase}/hourly/${dateStr}`;
     const remoteHourlyPath = `${remoteHourlyDir}/${fileNameBase}_${hourStr}.log`;
     
+    // Loại bỏ tiền tố ngày giờ để tạo tên gốc (vd: từ 2026-05-03_19-04_admin -> admin)
+    const genericNameBase = fileNameBase.replace(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_/, '');
+    const genericFileName = genericNameBase + path.extname(filePath);
+
     const remoteLatestDir = `${config.remoteBase}/latest`;
-    const remoteLatestLog = `${remoteLatestDir}/latest-${path.basename(filePath)}`;
-    const remoteLatestErr = `${remoteLatestDir}/latest-${fileNameBase}-errors.txt`;
-    const remoteLatestWarn = `${remoteLatestDir}/latest-${fileNameBase}-warnings.txt`;
+    const remoteLatestLog = `${remoteLatestDir}/latest-${genericFileName}`;
+    const remoteLatestErr = `${remoteLatestDir}/latest-${genericNameBase}-errors.txt`;
+    const remoteLatestWarn = `${remoteLatestDir}/latest-${genericNameBase}-warnings.txt`;
 
     if (!config.isDryRun) {
         try {
