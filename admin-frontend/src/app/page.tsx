@@ -21,9 +21,7 @@ function highlightLog(text: string) {
   });
 }
 
-const LogViewer = ({ content }: { content: string }) => {
-  const [filterText, setFilterText] = useState("");
-
+const LogViewer = ({ content, filterText = "" }: { content: string, filterText?: string }) => {
   if (!content) return <div className="log-viewer-container"><div style={{ color: '#666' }}>No data...</div></div>;
   
   const lines = content.split('\n');
@@ -32,26 +30,14 @@ const LogViewer = ({ content }: { content: string }) => {
   const displayLines = isTruncated ? matchedLines.slice(0, 5000) : matchedLines;
 
   return (
-    <div>
-      <div style={{ marginBottom: '0.5rem' }}>
-        <input 
-          type="text" 
-          className="input" 
-          style={{ width: '100%', border: '1px solid var(--border-color)', background: 'var(--sidebar-bg)' }}
-          placeholder="Lọc nhanh các dòng chứa nội dung (vd: error, exception...)" 
-          value={filterText} 
-          onChange={e => setFilterText(e.target.value)} 
-        />
-      </div>
-      <div className="log-viewer-container" style={{ marginTop: 0 }}>
-        {displayLines.map((line, idx) => (
-          <div key={idx} className="log-line">
-            {highlightLog(line)}
-          </div>
-        ))}
-        {isTruncated && <div className="log-line hl-warn" style={{ marginTop: '1rem' }}>... [Nội dung quá dài đã bị cắt bớt để bảo vệ trình duyệt (Giới hạn 5000 dòng đầu tiên)] ...</div>}
-        {filterText && matchedLines.length === 0 && <div className="log-line" style={{ color: '#666' }}>Không tìm thấy dòng nào khớp với "{filterText}"</div>}
-      </div>
+    <div className="log-viewer-container" style={{ marginTop: 0 }}>
+      {displayLines.map((line, idx) => (
+        <div key={idx} className="log-line">
+          {highlightLog(line)}
+        </div>
+      ))}
+      {isTruncated && <div className="log-line hl-warn" style={{ marginTop: '1rem' }}>... [Nội dung quá dài đã bị cắt bớt để bảo vệ trình duyệt (Giới hạn 5000 dòng đầu tiên)] ...</div>}
+      {filterText && matchedLines.length === 0 && <div className="log-line" style={{ color: '#666' }}>Không tìm thấy dòng nào khớp với "{filterText}"</div>}
     </div>
   );
 };
@@ -61,6 +47,7 @@ export default function AdminApp() {
   const [isLogged, setIsLogged] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [logContent, setLogContent] = useState("");
+  const [logFilter, setLogFilter] = useState("");
   const [refreshInterval, setRefreshInterval] = useState(0); // 0 = off, 30, 60
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
@@ -362,8 +349,16 @@ export default function AdminApp() {
                   <option value={60}>Auto Refresh: 60s</option>
                 </select>
               )}
+              
+              <input 
+                type="text" 
+                className="input input-flexible" 
+                placeholder="Lọc nhanh nội dung..." 
+                value={logFilter} 
+                onChange={e => setLogFilter(e.target.value)} 
+              />
             </div>
-            <LogViewer content={logContent} />
+            <LogViewer content={logContent} filterText={logFilter} />
           </div>
         )}
 
@@ -374,11 +369,18 @@ export default function AdminApp() {
                 <option value="">-- Chọn ngày --</option>
                 {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
+              <input 
+                type="text" 
+                className="input input-flexible" 
+                placeholder="Lọc nhanh các dòng chứa nội dung (vd: error, exception...)" 
+                value={logFilter} 
+                onChange={e => setLogFilter(e.target.value)} 
+              />
             </div>
             
             <div className="hourly-container">
-              <div className="card hourly-file-list">
-                <h4>Danh sách File</h4>
+              <div className="card hourly-file-list" style={{ margin: 0 }}>
+                <h4 style={{ marginTop: 0 }}>Danh sách File</h4>
                 {hourlyFiles.map(f => (
                   <div key={f} style={{ marginBottom: "0.5rem" }}>
                     <button className="btn" style={{ width: "100%", textAlign: "left" }} onClick={() => fetchHourlyLog(f)}>📄 {f}</button>
@@ -386,8 +388,8 @@ export default function AdminApp() {
                 ))}
                 {hourlyFiles.length === 0 && <p style={{color: '#666'}}>Chưa có file nào...</p>}
               </div>
-              <div style={{ flex: 1 }}>
-                <LogViewer content={logContent} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <LogViewer content={logContent} filterText={logFilter} />
               </div>
             </div>
           </div>
